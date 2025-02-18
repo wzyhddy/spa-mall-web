@@ -28,18 +28,15 @@ module.exports = {
     },
     proxy: {
       '/api': {
-        target: process.env.VUE_APP_BASE_API,
+        target: 'http://localhost:8011',
         changeOrigin: true,
         pathRewrite: {
-          '^/api': 'api'
+          '^/api': 'v1/api'
         }
       },
-      '/auth': {
-        target: process.env.VUE_APP_BASE_API,
+      '/v1': {
+        target: 'http://localhost:8011',
         changeOrigin: true,
-        pathRewrite: {
-          '^/auth': 'auth'
-        }
       }
     }
   },

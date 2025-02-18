@@ -97,8 +97,9 @@ export default {
   methods: {
     getCode() {
       getCodeImg().then(res => {
-        this.codeUrl = res.img
-        this.loginForm.uuid = res.uuid
+        const data = res.data
+        this.codeUrl = data.img
+        this.loginForm.uuid = data.uuid
       })
     },
     getCookie() {
