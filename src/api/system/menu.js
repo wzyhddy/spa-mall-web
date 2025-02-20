@@ -9,14 +9,14 @@ export function getMenusTree(pid) {
 
 export function getMenus(params) {
   return request({
-    url: 'api/menus',
-    method: 'get',
+    url: 'v1/menus/searchByPage',
+    method: 'post',
     params
   })
 }
 
 export function getMenuSuperior(ids) {
-  const data = Array.isArray(ids) ? ids : [ids]
+  const data = Array.isArray(ids) || ids.length === 0 ? ids : Array.of(ids)
   return request({
     url: 'api/menus/superior',
     method: 'post',
@@ -33,14 +33,14 @@ export function getChild(id) {
 
 export function buildMenus() {
   return request({
-    url: 'api/menus/build',
+    url: 'v1/menu/getMenuTree',
     method: 'get'
   })
 }
 
 export function add(data) {
   return request({
-    url: 'api/menus',
+    url: '/v1/menu/insert',
     method: 'post',
     data
   })
@@ -48,16 +48,16 @@ export function add(data) {
 
 export function del(ids) {
   return request({
-    url: 'api/menus',
-    method: 'delete',
+    url: '/v1/menu/deleteByIds',
+    method: 'post',
     data: ids
   })
 }
 
 export function edit(data) {
   return request({
-    url: 'api/menus',
-    method: 'put',
+    url: '/v1/menu/update',
+    method: 'post',
     data
   })
 }

@@ -4,8 +4,8 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.blurry" clearable size="small" placeholder="模糊搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <date-range-picker v-model="query.createTime" class="date-item" />
+        <el-input v-model="query.name" clearable size="small" placeholder="菜单名称模糊搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <date-range-picker v-model="query.betweenTime" class="date-item" />
         <rrOperation />
       </div>
       <crudOperation :permission="permission" />
@@ -34,43 +34,43 @@
             </el-input>
           </el-popover>
         </el-form-item>
-        <el-form-item v-show="form.type.toString() !== '2'" label="外链菜单" prop="iFrame">
-          <el-radio-group v-model="form.iFrame" size="mini">
-            <el-radio-button label="true">是</el-radio-button>
-            <el-radio-button label="false">否</el-radio-button>
+        <el-form-item v-show="form.type.toString() !== '2'" label="外链菜单" prop="isLink">
+          <el-radio-group v-model="form.isLink" size="mini">
+            <el-radio-button label="1">是</el-radio-button>
+            <el-radio-button label="0">否</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-show="form.type.toString() === '1'" label="菜单缓存" prop="cache">
-          <el-radio-group v-model="form.cache" size="mini">
-            <el-radio-button label="true">是</el-radio-button>
-            <el-radio-button label="false">否</el-radio-button>
-          </el-radio-group>
-        </el-form-item>
+        <!--        <el-form-item v-show="form.type.toString() === '1'" label="菜单缓存" prop="cache">-->
+        <!--          <el-radio-group v-model="form.cache" size="mini">-->
+        <!--            <el-radio-button label="true">是</el-radio-button>-->
+        <!--            <el-radio-button label="false">否</el-radio-button>-->
+        <!--          </el-radio-group>-->
+        <!--        </el-form-item>-->
         <el-form-item v-show="form.type.toString() !== '2'" label="菜单可见" prop="hidden">
           <el-radio-group v-model="form.hidden" size="mini">
             <el-radio-button label="false">是</el-radio-button>
             <el-radio-button label="true">否</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="form.type.toString() !== '2'" label="菜单标题" prop="title">
-          <el-input v-model="form.title" :style=" form.type.toString() === '0' ? 'width: 450px' : 'width: 178px'" placeholder="菜单标题" />
+        <el-form-item v-if="form.type.toString() !== '2'" label="菜单名称" prop="name">
+          <el-input v-model="form.name" :style=" form.type.toString() === '0' ? 'width: 450px' : 'width: 178px'" placeholder="菜单标题" />
         </el-form-item>
-        <el-form-item v-if="form.type.toString() === '2'" label="按钮名称" prop="title">
-          <el-input v-model="form.title" placeholder="按钮名称" style="width: 178px;" />
+        <el-form-item v-if="form.type.toString() === '2'" label="按钮名称" prop="name">
+          <el-input v-model="form.name" placeholder="按钮名称" style="width: 178px;" />
         </el-form-item>
         <el-form-item v-show="form.type.toString() !== '0'" label="权限标识" prop="permission">
-          <el-input v-model="form.permission" :disabled="form.iFrame.toString() === 'true'" placeholder="权限标识" style="width: 178px;" />
+          <el-input v-model="form.permission" :disabled="form.isLink === 1" placeholder="权限标识" style="width: 178px;" />
         </el-form-item>
         <el-form-item v-if="form.type.toString() !== '2'" label="路由地址" prop="path">
           <el-input v-model="form.path" placeholder="路由地址" style="width: 178px;" />
         </el-form-item>
-        <el-form-item label="菜单排序" prop="menuSort">
-          <el-input-number v-model.number="form.menuSort" :min="0" :max="999" controls-position="right" style="width: 178px;" />
+        <el-form-item label="菜单排序" prop="sort">
+          <el-input-number v-model.number="form.sort" :min="0" :max="999" controls-position="right" style="width: 178px;" />
         </el-form-item>
-        <el-form-item v-show="form.iFrame.toString() !== 'true' && form.type.toString() === '1'" label="组件名称" prop="componentName">
+        <el-form-item v-show="form.isLink !== 1 && form.type.toString() === '1'" label="组件名称" prop="componentName">
           <el-input v-model="form.componentName" style="width: 178px;" placeholder="匹配组件内Name字段" />
         </el-form-item>
-        <el-form-item v-show="form.iFrame.toString() !== 'true' && form.type.toString() === '1'" label="组件路径" prop="component">
+        <el-form-item v-show="form.isLink !== 1 && form.type.toString() === '1'" label="组件路径" prop="component">
           <el-input v-model="form.component" style="width: 178px;" placeholder="组件路径" />
         </el-form-item>
         <el-form-item label="上级类目" prop="pid">
@@ -102,38 +102,42 @@
       @selection-change="crud.selectionChangeHandler"
     >
       <el-table-column type="selection" width="55" />
-      <el-table-column :show-overflow-tooltip="true" label="菜单标题" width="125px" prop="title" />
+      <el-table-column :show-overflow-tooltip="true" label="菜单名称" width="125px" prop="name" />
       <el-table-column prop="icon" label="图标" align="center" width="60px">
         <template slot-scope="scope">
           <svg-icon :icon-class="scope.row.icon ? scope.row.icon : ''" />
         </template>
       </el-table-column>
-      <el-table-column prop="menuSort" align="center" label="排序">
+      <el-table-column prop="sort" align="center" label="排序">
         <template slot-scope="scope">
-          {{ scope.row.menuSort }}
+          {{ scope.row.sort }}
         </template>
       </el-table-column>
       <el-table-column :show-overflow-tooltip="true" prop="permission" label="权限标识" />
       <el-table-column :show-overflow-tooltip="true" prop="component" label="组件路径" />
-      <el-table-column prop="iFrame" label="外链" width="75px">
+      <el-table-column prop="isLink" label="外链" width="75px">
         <template slot-scope="scope">
-          <span v-if="scope.row.iFrame">是</span>
+          <span v-if="scope.row.isLink">是</span>
           <span v-else>否</span>
         </template>
       </el-table-column>
-      <el-table-column prop="cache" label="缓存" width="75px">
-        <template slot-scope="scope">
-          <span v-if="scope.row.cache">是</span>
-          <span v-else>否</span>
-        </template>
-      </el-table-column>
+      <!--      <el-table-column prop="cache" label="缓存" width="75px">-->
+      <!--        <template slot-scope="scope">-->
+      <!--          <span v-if="scope.row.cache">是</span>-->
+      <!--          <span v-else>否</span>-->
+      <!--        </template>-->
+      <!--      </el-table-column>-->
       <el-table-column prop="hidden" label="可见" width="75px">
         <template slot-scope="scope">
           <span v-if="scope.row.hidden">否</span>
           <span v-else>是</span>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建日期" width="135px" />
+      <el-table-column prop="createTime" label="创建日期" width="135px">
+        <template slot-scope="{row}">
+          {{ row.createTime | formatDate }}
+        </template>
+      </el-table-column>
       <el-table-column v-if="checkPer(['admin','menu:edit','menu:del'])" label="操作" width="130px" align="center" fixed="right">
         <template slot-scope="scope">
           <udOperation
@@ -160,12 +164,12 @@ import udOperation from '@crud/UD.operation'
 import DateRangePicker from '@/components/DateRangePicker'
 
 // crud交由presenter持有
-const defaultForm = { id: null, title: null, menuSort: 999, path: null, component: null, componentName: null, iFrame: false, roles: [], pid: 0, icon: null, cache: false, hidden: false, type: 0, permission: null }
+const defaultForm = { id: null, name: null, sort: 999, path: null, component: null, componentName: null, isLink: false, roles: [], pid: 0, icon: null, hidden: false, type: 0, permission: null }
 export default {
   name: 'Menu',
   components: { Treeselect, IconSelect, crudOperation, rrOperation, udOperation, DateRangePicker },
   cruds() {
-    return CRUD({ title: '菜单', url: 'api/menus', crudMethod: { ...crudMenu }})
+    return CRUD({ name: '菜单', url: '/v1/menu/searchByPage', crudMethod: { ...crudMenu }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
@@ -177,7 +181,7 @@ export default {
         del: ['admin', 'menu:del']
       },
       rules: {
-        title: [
+        name: [
           { required: true, message: '请输入标题', trigger: 'blur' }
         ],
         path: [
@@ -185,6 +189,9 @@ export default {
         ]
       }
     }
+  },
+  mounted() {
+    this.initWebSocket()
   },
   methods: {
     // 新增与编辑前做的操作
@@ -236,17 +243,56 @@ export default {
     // 选中图标
     selected(name) {
       this.form.icon = name
+    },
+    // 初始化方法
+    initWebSocket() {
+      const ws = 'ws://localhost:8012/websocket/1'
+      // 实例化socket
+      this.socket = new WebSocket(ws)
+      // 监听socket连接
+      this.socket.onopen = this.onopen
+      // 监听socket错误信息
+      this.socket.onerror = this.onerror
+      // 监听socket消息
+      this.socket.onmessage = this.onMessage
+      // 监听socket断开连接的消息
+      this.socket.close = this.close
+    },
+
+    // 连接成功方法
+    onopen() {
+      console.log('socket连接成功')
+    },
+    // 连接错误
+    onerror() {
+      console.log('连接错误')
+    },
+    // 接受信息接口
+    onMessage(message) {
+      debugger
+      console.log('收到消息:' + message)
+      const data = message.data
+      this.$notify({
+        title: '消息通知',
+        type: 'success',
+        message: data,
+        position: 'bottom-right'
+      })
+    },
+    // 关闭处理
+    close() {
+      console.log('连接关闭')
     }
   }
 }
 </script>
 
 <style rel="stylesheet/scss" lang="scss" scoped>
- ::v-deep .el-input-number .el-input__inner {
-    text-align: left;
-  }
- ::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
-    height: 30px;
-    line-height: 30px;
-  }
+::v-deep .el-input-number .el-input__inner {
+  text-align: left;
+}
+::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
+  height: 30px;
+  line-height: 30px;
+}
 </style>

@@ -5,8 +5,8 @@
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
         <el-input v-model="query.name" clearable size="small" placeholder="输入部门名称搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <date-range-picker v-model="query.createTime" class="date-item" />
-        <el-select v-model="query.enabled" clearable size="small" placeholder="状态" class="filter-item" style="width: 90px" @change="crud.toQuery">
+        <date-range-picker v-model="query.betweenTime" class="date-item" />
+        <el-select v-model="query.validStatus" clearable size="small" placeholder="状态" class="filter-item" style="width: 90px" @change="crud.toQuery">
           <el-option v-for="item in enabledTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
         </el-select>
         <rrOperation />
@@ -19,7 +19,7 @@
         <el-form-item label="部门名称" prop="name">
           <el-input v-model="form.name" style="width: 370px;" />
         </el-form-item>
-        <el-form-item label="部门排序" prop="deptSort">
+        <el-form-item label="部门排序" prop="sort">
           <el-input-number
             v-model.number="form.deptSort"
             :min="0"
@@ -34,9 +34,9 @@
             <el-radio label="0">否</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="状态" prop="enabled">
-          <el-radio v-for="item in dict.dept_status" :key="item.id" v-model="form.enabled" :label="item.value">{{ item.label }}</el-radio>
-        </el-form-item>
+        <!--        <el-form-item label="状态" prop="enabled">-->
+        <!--          <el-radio v-for="item in dict.dept_status" :key="item.id" v-model="form.enabled" :label="item.value">{{ item.label }}</el-radio>-->
+        <!--        </el-form-item>-->
         <el-form-item v-if="form.isTop === '0'" style="margin-bottom: 0;" label="上级部门" prop="pid">
           <treeselect
             v-model="form.pid"
@@ -67,19 +67,23 @@
     >
       <el-table-column :selectable="checkboxT" type="selection" width="55" />
       <el-table-column label="名称" prop="name" />
-      <el-table-column label="排序" prop="deptSort" />
-      <el-table-column label="状态" align="center" prop="enabled">
+      <!--      <el-table-column label="排序" prop="deptSort" />-->
+      <el-table-column label="状态" align="center" prop="validStatus">
         <template slot-scope="scope">
           <el-switch
-            v-model="scope.row.enabled"
+            v-model="scope.row.validStatus"
             :disabled="scope.row.id === 1"
             active-color="#409EFF"
             inactive-color="#F56C6C"
-            @change="changeEnabled(scope.row, scope.row.enabled,)"
+            @change="changeEnabled(scope.row, scope.row.validStatus,)"
           />
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建日期" />
+      <el-table-column prop="createTime" label="创建日期">
+        <template slot-scope="{row}">
+          {{ row.createTime | formatDate }}
+        </template>
+      </el-table-column>
       <el-table-column v-if="checkPer(['admin','dept:edit','dept:del'])" label="操作" width="130px" align="center" fixed="right">
         <template slot-scope="scope">
           <udOperation
@@ -110,7 +114,7 @@ export default {
   name: 'Dept',
   components: { Treeselect, crudOperation, rrOperation, udOperation, DateRangePicker },
   cruds() {
-    return CRUD({ title: '部门', url: 'api/dept', crudMethod: { ...crudDept }})
+    return CRUD({ title: '部门', url: '/v1/dept/searchByPage', crudMethod: { ...crudDept }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   // 设置数据字典
@@ -132,8 +136,8 @@ export default {
         del: ['admin', 'dept:del']
       },
       enabledTypeOptions: [
-        { key: 'true', display_name: '正常' },
-        { key: 'false', display_name: '禁用' }
+        { key: '1', display_name: '正常' },
+        { key: '0', display_name: '禁用' }
       ]
     }
   },
@@ -178,8 +182,9 @@ export default {
       })
     },
     getDepts() {
-      crudDept.getDepts({ enabled: true }).then(res => {
-        this.depts = res.content.map(function(obj) {
+      crudDept.getDepts({ queryTree: true, pageSize: 1 }).then(res => {
+        const data = res.data.data
+        this.depts = data.map(function(obj) {
           if (obj.hasChildren) {
             obj.children = null
           }

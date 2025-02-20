@@ -48,8 +48,9 @@ const user = {
     GetInfo({ commit }) {
       return new Promise((resolve, reject) => {
         getInfo().then(res => {
-          setUserInfo(res, commit)
-          resolve(res)
+          const data = res.data
+          setUserInfo(data, commit)
+          resolve(data)
         }).catch(error => {
           reject(error)
         })
@@ -84,12 +85,12 @@ export const logOut = (commit) => {
 
 export const setUserInfo = (res, commit) => {
   // 如果没有任何权限，则赋予一个默认的权限，避免请求死循环
-  if (res.roles.length === 0) {
+  if (!res.roles || res.roles.length === 0) {
     commit('SET_ROLES', ['ROLE_SYSTEM_DEFAULT'])
   } else {
     commit('SET_ROLES', res.roles)
   }
-  commit('SET_USER', res.user)
+  commit('SET_USER', res.username)
 }
 
 export default user

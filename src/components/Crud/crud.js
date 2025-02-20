@@ -32,9 +32,9 @@ function CRUD(options) {
     // 重置表单
     defaultForm: () => {},
     // 排序规则，默认 id 降序， 支持多字段排序 ['id,desc', 'createTime,asc']
-    sort: ['id,desc'],
+    sortField: ['id,desc'],
     // 等待时间
-    time: 0,
+    time: 50,
     // CRUD Method
     crudMethod: {
       add: (form) => {},
@@ -89,11 +89,11 @@ function CRUD(options) {
     },
     page: {
       // 页码
-      page: 0,
+      pageNo: 1,
       // 每页数据条数
-      size: 10,
+      pageSize: 10,
       // 总数据条数
-      total: 0
+      totalCount: 0
     },
     // 整体loading
     loading: false,
@@ -120,7 +120,7 @@ function CRUD(options) {
     },
     // 搜索
     toQuery() {
-      crud.page.page = 1
+      crud.page.pageNo = 1
       crud.refresh()
     },
     // 刷新
@@ -131,14 +131,15 @@ function CRUD(options) {
       return new Promise((resolve, reject) => {
         crud.loading = true
         // 请求数据
-        initData(crud.url, crud.getQueryParams()).then(data => {
+        initData(crud.url, crud.getQueryParams()).then(res => {
+          const data = res.data
           const table = crud.getTable()
           if (table && table.lazy) { // 懒加载子节点数据，清掉已加载的数据
             table.store.states.treeData = {}
             table.store.states.lazyTreeNodeMap = {}
           }
-          crud.page.total = data.totalElements
-          crud.data = data.content
+          crud.page.totalCount = data.totalCount
+          crud.data = data.data
           crud.resetDataStatus()
           // time 毫秒后显示表格
           setTimeout(() => {
@@ -329,8 +330,15 @@ function CRUD(options) {
      */
     doExport() {
       crud.downloadLoading = true
-      download(crud.url + '/download', crud.getQueryParams()).then(result => {
-        downloadFile(result, crud.title + '数据', 'xlsx')
+      const arr = crud.url.split('/')
+      let downloadUrl = ''
+      for (let i = 1; i < arr.length - 1; i++) {
+        downloadUrl = downloadUrl + '/' + arr[i]
+        if (i === arr.length - 2) {
+          downloadUrl += '/export'
+        }
+      }
+      download(downloadUrl, crud.getQueryParams()).then(result => {
         crud.downloadLoading = false
       }).catch(() => {
         crud.downloadLoading = false
@@ -348,28 +356,28 @@ function CRUD(options) {
         if (crud.params[item] === null || crud.params[item] === '') crud.params[item] = undefined
       })
       return {
-        page: crud.page.page - 1,
-        size: crud.page.size,
-        sort: crud.sort,
+        pageNo: crud.page.pageNo,
+        pageSize: crud.page.pageSize,
+        sortField: crud.sortField,
         ...crud.query,
         ...crud.params
       }
     },
     // 当前页改变
     pageChangeHandler(e) {
-      crud.page.page = e
+      crud.page.pageNo = e
       crud.refresh()
     },
     // 每页条数改变
     sizeChangeHandler(e) {
-      crud.page.size = e
-      crud.page.page = 1
+      crud.page.pageSize = e
+      crud.page.pageNo = 1
       crud.refresh()
     },
     // 预防删除第二页最后一条数据时，或者多选删除第二页的数据时，页码错误导致请求无数据
     dleChangePage(size) {
-      if (crud.data.length === size && crud.page.page !== 1) {
-        crud.page.page -= 1
+      if (crud.data.length === size && crud.page.pageNo !== 1) {
+        crud.page.pageNo -= 1
       }
     },
     // 选择改变
@@ -397,10 +405,6 @@ function CRUD(options) {
      * @param {Array} data 数据
      */
     resetForm(data) {
-      delete crud.form['createTime']
-      delete crud.form['updateTime']
-      delete crud.form['createBy']
-      delete crud.form['updateBy']
       const form = data || (typeof crud.defaultForm === 'object' ? JSON.parse(JSON.stringify(crud.defaultForm)) : crud.defaultForm.apply(crud.findVM('form')))
       const crudFrom = crud.form
       for (const key in form) {
@@ -657,7 +661,9 @@ function presenter(crud) {
     data() {
       // 在data中返回crud，是为了将crud与当前实例关联，组件观测crud相关属性变化
       return {
-        crud: this.crud
+        crud: this.crud,
+        pageNo: this.crud.pageNo,
+        page: this.crud.page
       }
     },
     beforeCreate() {
@@ -728,7 +734,7 @@ function pagination() {
     data() {
       return {
         crud: this.crud,
-        page: this.crud.page
+        pageNo: this.crud.pageNo
       }
     },
     beforeCreate() {

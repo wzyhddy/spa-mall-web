@@ -16,7 +16,7 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     if (getToken()) {
-      config.headers['Authorization'] = getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+      config.headers['Authorization'] = 'Basic@' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
     }
     config.headers['Content-Type'] = 'application/json'
     return config
@@ -29,32 +29,30 @@ service.interceptors.request.use(
 // response 拦截器
 service.interceptors.response.use(
   response => {
-    return response.data
-  },
-  error => {
-    // 兼容blob下载出错json提示
-    if (error.response.data instanceof Blob && error.response.data.type.toLowerCase().indexOf('json') !== -1) {
-      const reader = new FileReader()
-      reader.readAsText(error.response.data, 'utf-8')
-      reader.onload = function(e) {
-        const errorMsg = JSON.parse(reader.result).message
+    if (response.data instanceof Blob) {
+      const temp = response.headers['content-disposition'].split(';')[1].split('filename=')[1]
+      const fileName = decodeURIComponent(temp)
+      const a = document.createElement('a')
+      document.body.appendChild(a)
+      a.style = 'display: none'
+      a.href = window.URL.createObjectURL(response.data)
+      a.download = fileName
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(a.href)
+      return
+    }
+    const code = response.data.code
+    const message = response.data.message
+    if (code === 200) {
+      return response.data
+    } else {
+      if (message.toString().indexOf('Error: timeout') !== -1) {
         Notification.error({
-          title: errorMsg,
+          title: '网络请求超时',
           duration: 5000
         })
-      }
-    } else {
-      let code = 0
-      try {
-        code = error.response.data.status
-      } catch (e) {
-        if (error.toString().indexOf('Error: timeout') !== -1) {
-          Notification.error({
-            title: '网络请求超时',
-            duration: 5000
-          })
-          return Promise.reject(error)
-        }
+        return Promise.reject(message)
       }
       console.log(code)
       if (code) {
@@ -67,7 +65,7 @@ service.interceptors.response.use(
         } else if (code === 403) {
           router.push({ path: '/401' })
         } else {
-          const errorMsg = error.response.data.message
+          const errorMsg = message
           if (errorMsg !== undefined) {
             Notification.error({
               title: errorMsg,
@@ -81,8 +79,8 @@ service.interceptors.response.use(
           duration: 5000
         })
       }
+      return Promise.reject(message)
     }
-    return Promise.reject(error)
   }
 )
 export default service

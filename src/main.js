@@ -22,7 +22,12 @@ import store from './store'
 import router from './router/routers'
 
 import './assets/icons' // icon
-import './router/index' // permission control
+import './router/index'
+import moment from 'moment' // permission control
+Vue.filter('formatDate', function(value) {
+  if (!value) return ''
+  return moment(value).format('YYYY-MM-DD HH:mm:ss')
+})
 
 Vue.use(checkPer)
 Vue.use(permission)
