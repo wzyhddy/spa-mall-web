@@ -9,22 +9,26 @@
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="name" label="名称" />
-      <el-table-column prop="jobSort" label="排序">
+      <el-table-column prop="sort" label="排序">
         <template slot-scope="scope">
-          {{ scope.row.jobSort }}
+          {{ scope.row.sort }}
         </template>
       </el-table-column>
-      <el-table-column prop="status" label="状态" align="center">
+      <el-table-column prop="validStatus" label="状态" align="center">
         <template slot-scope="scope">
           <el-switch
-            v-model="scope.row.enabled"
+            v-model="scope.row.validStatus"
             active-color="#409EFF"
             inactive-color="#F56C6C"
-            @change="changeEnabled(scope.row, scope.row.enabled)"
+            @change="changeEnabled(scope.row, scope.row.validStatus)"
           />
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建日期" />
+      <el-table-column prop="createTime" label="创建日期">
+        <template slot-scope="{row}">
+          {{ row.createTime | formatDate }}
+        </template>
+      </el-table-column>
       <!--   编辑与删除   -->
       <el-table-column
         v-if="checkPer(['admin','job:edit','job:del'])"
@@ -44,7 +48,7 @@
     <!--分页组件-->
     <pagination />
     <!--表单渲染-->
-    <eForm :job-status="dict.job_status" />
+    <eForm :valid-status="dict.valid_status" />
   </div>
 </template>
 
@@ -62,14 +66,14 @@ export default {
   cruds() {
     return CRUD({
       title: '岗位',
-      url: 'api/job',
-      sort: ['jobSort,asc', 'id,desc'],
+      url: '/v1/job/searchByPage',
+      sort: ['sort,asc', 'id,desc'],
       crudMethod: { ...crudJob }
     })
   },
   mixins: [presenter()],
   // 数据字典
-  dicts: ['job_status'],
+  dicts: ['valid_status'],
   data() {
     return {
       permission: {
@@ -82,7 +86,7 @@ export default {
   methods: {
     // 改变状态
     changeEnabled(data, val) {
-      this.$confirm('此操作将 "' + this.dict.label.job_status[val] + '" ' + data.name + '岗位, 是否继续？', '提示', {
+      this.$confirm('此操作将 "' + this.dict.label.valid_status[val] + '" ' + data.name + '岗位, 是否继续？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -90,7 +94,7 @@ export default {
         // eslint-disable-next-line no-undef
         crudJob.edit(data).then(() => {
           // eslint-disable-next-line no-undef
-          this.crud.notify(this.dict.label.job_status[val] + '成功', 'success')
+          this.crud.notify(this.dict.label.valid_status[val] + '成功', 'success')
         }).catch(err => {
           data.enabled = !data.enabled
           console.log(err.data.message)

@@ -15,9 +15,9 @@ export default class Dict {
       Vue.set(this.dict.dict, n, {})
       Vue.set(this.dict.label, n, {})
       Vue.set(this.dict, n, [])
-      ps.push(getDictDetail(n).then(data => {
-        this.dict[n].splice(0, 0, ...data.content)
-        data.content.forEach(d => {
+      ps.push(getDictDetail(n).then(res => {
+        this.dict[n].splice(0, 0, ...res.data)
+        res.data.forEach(d => {
           Vue.set(this.dict.dict[n], d.value, d)
           Vue.set(this.dict.label[n], d.value, d.label)
         })

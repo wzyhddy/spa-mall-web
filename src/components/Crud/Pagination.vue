@@ -1,9 +1,9 @@
 <!--分页-->
 <template>
   <el-pagination
-    :page-size.sync="page.size"
-    :total="page.total"
-    :current-page.sync="page.page"
+    :page-size.sync="page.pageSize"
+    :total="page.totalCount"
+    :current-page.sync="page.data"
     style="margin-top: 8px;"
     layout="total, prev, pager, next, sizes"
     @size-change="crud.sizeChangeHandler($event)"

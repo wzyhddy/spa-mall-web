@@ -45,7 +45,7 @@ export const constantRouterMap = [
     ]
   },
   {
-    path: '/user',
+    path: '/user/center',
     component: Layout,
     hidden: true,
     redirect: 'noredirect',

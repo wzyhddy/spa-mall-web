@@ -21,8 +21,8 @@
           <el-form-item label="字典值" prop="value">
             <el-input v-model="form.value" style="width: 370px;" />
           </el-form-item>
-          <el-form-item label="排序" prop="dictSort">
-            <el-input-number v-model.number="form.dictSort" :min="0" :max="999" controls-position="right" style="width: 370px;" />
+          <el-form-item label="排序" prop="sort">
+            <el-input-number v-model.number="form.sort" :min="0" :max="999" controls-position="right" style="width: 370px;" />
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -37,7 +37,7 @@
         </el-table-column>
         <el-table-column prop="label" label="字典标签" />
         <el-table-column prop="value" label="字典值" />
-        <el-table-column prop="dictSort" label="排序" />
+        <el-table-column prop="sort" label="排序" />
         <el-table-column v-if="checkPer(['admin','dict:edit','dict:del'])" label="操作" width="130px" align="center" fixed="right">
           <template slot-scope="scope">
             <udOperation
@@ -66,7 +66,7 @@ export default {
   components: { pagination, rrOperation, udOperation },
   cruds() {
     return [
-      CRUD({ title: '字典详情', url: 'api/dictDetail', query: { dictName: '' }, sort: ['dictSort,asc', 'id,desc'],
+      CRUD({ title: '字典详情', url: 'v1/dictDetail/searchByPage', query: { dictName: '' }, sort: ['dictSort,asc', 'id,desc'],
         crudMethod: { ...crudDictDetail },
         optShow: {
           add: true,

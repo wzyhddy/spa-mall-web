@@ -1,15 +1,21 @@
 import request from '@/utils/request'
 
-export function getDicts() {
+export function getDicts(type) {
+  const data = {
+    pageNo: 1,
+    pageSize: 9999,
+    type: type
+  }
   return request({
-    url: 'api/dict/all',
-    method: 'get'
+    url: 'v1/dict/searchByPage',
+    method: 'post',
+    data
   })
 }
 
 export function add(data) {
   return request({
-    url: 'api/dict',
+    url: 'v1/dict/insert',
     method: 'post',
     data
   })
@@ -17,16 +23,16 @@ export function add(data) {
 
 export function del(ids) {
   return request({
-    url: 'api/dict/',
-    method: 'delete',
+    url: 'v1/dict/deleteByIds',
+    method: 'post',
     data: ids
   })
 }
 
 export function edit(data) {
   return request({
-    url: 'api/dict',
-    method: 'put',
+    url: 'v1/dict/update',
+    method: 'post',
     data
   })
 }

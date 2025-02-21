@@ -3,7 +3,7 @@ import { encrypt } from '@/utils/rsaEncrypt'
 
 export function add(data) {
   return request({
-    url: 'api/users',
+    url: 'v1/user/insert',
     method: 'post',
     data
   })
@@ -11,16 +11,16 @@ export function add(data) {
 
 export function del(ids) {
   return request({
-    url: 'api/users',
-    method: 'delete',
+    url: 'v1/user/deleteById',
+    method: 'post',
     data: ids
   })
 }
 
 export function edit(data) {
   return request({
-    url: 'api/users',
-    method: 'put',
+    url: 'v1/user/update',
+    method: 'post',
     data
   })
 }
@@ -39,7 +39,7 @@ export function updatePass(user) {
     newPass: encrypt(user.newPass)
   }
   return request({
-    url: 'api/users/updatePass/',
+    url: 'v1/user/updatePass/',
     method: 'post',
     data
   })
@@ -47,8 +47,8 @@ export function updatePass(user) {
 
 export function resetPwd(ids) {
   return request({
-    url: 'api/users/resetPwd',
-    method: 'put',
+    url: 'v1/user/resetPwd',
+    method: 'post',
     data: ids
   })
 }
@@ -59,7 +59,7 @@ export function updateEmail(form) {
     email: form.email
   }
   return request({
-    url: 'api/users/updateEmail/' + form.code,
+    url: 'v1/user/updateEmail/' + form.code,
     method: 'post',
     data
   })

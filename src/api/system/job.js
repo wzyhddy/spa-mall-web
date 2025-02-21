@@ -1,21 +1,21 @@
 import request from '@/utils/request'
 
 export function getAllJob() {
-  const params = {
-    page: 0,
-    size: 9999,
+  const data = {
+    pageNo: 1,
+    pageSize: 9999,
     enabled: true
   }
   return request({
-    url: 'api/job',
-    method: 'get',
-    params
+    url: 'v1/job/searchByPage',
+    method: 'post',
+    data
   })
 }
 
 export function add(data) {
   return request({
-    url: 'api/job',
+    url: 'v1/job/insert',
     method: 'post',
     data
   })
@@ -23,16 +23,16 @@ export function add(data) {
 
 export function del(ids) {
   return request({
-    url: 'api/job',
-    method: 'delete',
+    url: 'v1/job/deleteByIds',
+    method: 'post',
     data: ids
   })
 }
 
 export function edit(data) {
   return request({
-    url: 'api/job',
-    method: 'put',
+    url: 'v1/job/update',
+    method: 'post',
     data
   })
 }

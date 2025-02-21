@@ -1,15 +1,13 @@
 import request from '@/utils/request'
 
 export function get(dictName) {
-  const params = {
-    dictName,
-    page: 0,
-    size: 9999
+  const data = {
+    dictName
   }
   return request({
-    url: 'api/dictDetail',
-    method: 'get',
-    params
+    url: 'v1/dictDetail/searchDictDetail',
+    method: 'post',
+    data
   })
 }
 
@@ -28,7 +26,7 @@ export function getDictMap(dictName) {
 
 export function add(data) {
   return request({
-    url: 'api/dictDetail',
+    url: 'v1/dictDetail/insert',
     method: 'post',
     data
   })
@@ -36,15 +34,16 @@ export function add(data) {
 
 export function del(id) {
   return request({
-    url: 'api/dictDetail/' + id,
-    method: 'delete'
+    url: 'v1/dictDetail/deleteByIds',
+    method: 'post',
+    data: id
   })
 }
 
 export function edit(data) {
   return request({
-    url: 'api/dictDetail',
-    method: 'put',
+    url: 'v1/dictDetail/update',
+    method: 'post',
     data
   })
 }

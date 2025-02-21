@@ -72,7 +72,7 @@
           </crudOperation>
         </div>
         <!--表单渲染-->
-        <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="555px">
+        <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="570px">
           <el-form ref="form" :inline="true" :model="form" :rules="rules" size="small" label-width="66px">
             <el-form-item label="用户名" prop="username">
               <el-input v-model="form.username" @keydown.native="keydown($event)" />
@@ -91,14 +91,14 @@
                 v-model="form.dept.id"
                 :options="depts"
                 :load-options="loadDepts"
-                style="width: 173px"
+                style="width: 178px"
                 placeholder="选择部门"
               />
             </el-form-item>
-            <el-form-item label="岗位" prop="jobDatas" class="is-required">
+            <el-form-item label="岗位" prop="jobs">
               <el-select
                 v-model="jobDatas"
-                style="width: 172px"
+                style="width: 178px"
                 multiple
                 placeholder="请选择"
                 @remove-tag="deleteTag"
@@ -127,11 +127,10 @@
                 >{{ item.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
-            <el-form-item style="margin-bottom: 0;" label="角色" prop="roleDatas" class="is-required">
+            <el-form-item style="margin-bottom: 0;" label="角色" prop="roles">
               <el-select
                 v-model="roleDatas"
-                :disabled="form.id === user.id"
-                style="width: 426px"
+                style="width: 437px"
                 multiple
                 placeholder="请选择"
                 @remove-tag="deleteTag"
@@ -162,7 +161,7 @@
           <el-table-column :show-overflow-tooltip="true" width="135" prop="email" label="邮箱" />
           <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
             <template slot-scope="scope">
-              <div>{{ scope.row.dept.name }}</div>
+              <div>{{ scope.row.deptName }}</div>
             </template>
           </el-table-column>
           <el-table-column label="状态" align="center" prop="enabled">
@@ -203,7 +202,7 @@
 <script>
 import crudUser from '@/api/system/user'
 import { isvalidPhone } from '@/utils/validate'
-import { getDepts, getDeptSuperior } from '@/api/system/dept'
+import { getDeptTree, getDeptSuperior } from '@/api/system/dept'
 import { getAll, getLevel } from '@/api/system/role'
 import { getAllJob } from '@/api/system/job'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
@@ -223,7 +222,7 @@ export default {
   name: 'User',
   components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
   cruds() {
-    return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser }})
+    return CRUD({ title: '用户', url: '/v1/user/searchByPage', crudMethod: { ...crudUser }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   // 数据字典
@@ -268,35 +267,6 @@ export default {
         ],
         phone: [
           { required: true, trigger: 'blur', validator: validPhone }
-        ],
-        'dept.id': [
-          { required: true, message: '部门不能为空', trigger: 'blur' }
-        ],
-        jobDatas: [
-          {
-            validator: (rule, value, callback) => {
-              value = this.jobDatas
-              if (!value || value.length === 0) {
-                callback(new Error('请选择至少一个岗位'))
-              } else {
-                callback()
-              }
-            },
-            trigger: 'change'
-          }
-        ],
-        roleDatas: [
-          {
-            validator: (rule, value, callback) => {
-              value = this.roleDatas
-              if (!value || value.length === 0) {
-                callback(new Error('请选择至少一个角色'))
-              } else {
-                callback()
-              }
-            },
-            trigger: 'change'
-          }
         ]
       }
     }
@@ -381,6 +351,25 @@ export default {
     },
     // 提交前做的操作
     [CRUD.HOOK.afterValidateCU](crud) {
+      if (!crud.form.dept.id) {
+        this.$message({
+          message: '部门不能为空',
+          type: 'warning'
+        })
+        return false
+      } else if (this.jobDatas.length === 0) {
+        this.$message({
+          message: '岗位不能为空',
+          type: 'warning'
+        })
+        return false
+      } else if (this.roleDatas.length === 0) {
+        this.$message({
+          message: '角色不能为空',
+          type: 'warning'
+        })
+        return false
+      }
       crud.form.roles = userRoles
       crud.form.jobs = userJobs
       return true
@@ -397,18 +386,18 @@ export default {
         params['pid'] = node.data.id
       }
       setTimeout(() => {
-        getDepts(params).then(res => {
+        getDeptTree(params).then(res => {
           if (resolve) {
-            resolve(res.content)
+            resolve(res.data)
           } else {
-            this.deptDatas = res.content
+            this.deptDatas = res.data
           }
         })
       }, 100)
     },
     getDepts() {
-      getDepts({ enabled: true }).then(res => {
-        this.depts = res.content.map(function(obj) {
+      getDeptTree({ enabled: true }).then(res => {
+        this.depts = res.data.map(function(obj) {
           if (obj.hasChildren) {
             obj.children = null
           }
@@ -418,7 +407,7 @@ export default {
     },
     getSupDepts(deptId) {
       getDeptSuperior(deptId).then(res => {
-        const date = res.content
+        const date = res.data
         this.buildDepts(date)
         this.depts = date
       })
@@ -436,8 +425,8 @@ export default {
     // 获取弹窗内部门数据
     loadDepts({ action, parentNode, callback }) {
       if (action === LOAD_CHILDREN_OPTIONS) {
-        getDepts({ enabled: true, pid: parentNode.id }).then(res => {
-          parentNode.children = res.content.map(function(obj) {
+        getDeptTree({ enabled: true, pid: parentNode.id }).then(res => {
+          parentNode.children = res.data.map(function(obj) {
             if (obj.hasChildren) {
               obj.children = null
             }

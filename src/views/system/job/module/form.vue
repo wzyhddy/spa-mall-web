@@ -25,10 +25,10 @@
       </el-form-item>
       <el-form-item
         label="排序"
-        prop="jobSort"
+        prop="sort"
       >
         <el-input-number
-          v-model.number="form.jobSort"
+          v-model.number="form.sort"
           :min="0"
           :max="999"
           controls-position="right"
@@ -41,7 +41,7 @@
         prop="enabled"
       >
         <el-radio
-          v-for="item in jobStatus"
+          v-for="item in validStatus"
           :key="item.id"
           v-model="form.enabled"
           :label="item.value === 'true'"
@@ -83,7 +83,7 @@ const defaultForm = {
 export default {
   mixins: [form(defaultForm)],
   props: {
-    jobStatus: {
+    validStatus: {
       type: Array,
       required: true
     }
@@ -94,7 +94,7 @@ export default {
         name: [
           { required: true, message: '请输入名称', trigger: 'blur' }
         ],
-        jobSort: [
+        sort: [
           { required: true, message: '请输入序号', trigger: 'blur', type: 'number' }
         ]
       }

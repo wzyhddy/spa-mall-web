@@ -3,11 +3,11 @@
     <!--表单组件-->
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible="crud.status.cu > 0" :title="crud.status.title" width="500px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="80px">
-        <el-form-item label="字典名称" prop="name">
-          <el-input v-model="form.name" style="width: 370px;" />
+        <el-form-item label="字典名称" prop="dictName">
+          <el-input v-model="form.dictName" style="width: 370px;" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" style="width: 370px;" />
+          <el-input v-model="form.dictDescription" style="width: 370px;" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -31,8 +31,8 @@
           <!--表格渲染-->
           <el-table ref="table" v-loading="crud.loading" :data="crud.data" highlight-current-row style="width: 100%;" @selection-change="crud.selectionChangeHandler" @current-change="handleCurrentChange">
             <el-table-column type="selection" width="55" />
-            <el-table-column :show-overflow-tooltip="true" prop="name" label="名称" />
-            <el-table-column :show-overflow-tooltip="true" prop="description" label="描述" />
+            <el-table-column :show-overflow-tooltip="true" prop="dictName" label="名称" />
+            <el-table-column :show-overflow-tooltip="true" prop="dictDescription" label="描述" />
             <el-table-column v-if="checkPer(['admin','dict:edit','dict:del'])" label="操作" width="130px" align="center" fixed="right">
               <template slot-scope="scope">
                 <udOperation
@@ -84,15 +84,15 @@ export default {
   components: { crudOperation, pagination, rrOperation, udOperation, dictDetail },
   cruds() {
     return [
-      CRUD({ title: '字典', url: 'api/dict', crudMethod: { ...crudDict }})
+      CRUD({ title: '字典', url: 'v1/dict/searchByPage', crudMethod: { ...crudDict }})
     ]
   },
   mixins: [presenter(), header(), form(defaultForm)],
   data() {
     return {
       queryTypeOptions: [
-        { key: 'name', display_name: '字典名称' },
-        { key: 'description', display_name: '描述' }
+        { key: 'dictName', display_name: '字典名称' },
+        { key: 'dictDescription', display_name: '描述' }
       ],
       rules: {
         name: [
@@ -117,7 +117,7 @@ export default {
     // 选中字典后，设置字典详情数据
     handleCurrentChange(val) {
       if (val) {
-        this.$refs.dictDetail.query.dictName = val.name
+        this.$refs.dictDetail.query.dictName = val.dictName
         this.$refs.dictDetail.dictId = val.id
         this.$refs.dictDetail.crud.toQuery()
       }
