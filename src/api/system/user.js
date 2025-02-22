@@ -11,7 +11,7 @@ export function add(data) {
 
 export function del(ids) {
   return request({
-    url: 'v1/user/deleteById',
+    url: 'v1/user/deleteByIds',
     method: 'post',
     data: ids
   })

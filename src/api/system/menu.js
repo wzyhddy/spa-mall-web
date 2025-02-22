@@ -1,9 +1,13 @@
 import request from '@/utils/request'
 
 export function getMenusTree(pid) {
+  const data = {
+    pid: pid
+  }
   return request({
-    url: 'api/menus/lazy?pid=' + pid,
-    method: 'get'
+    url: 'v1/menu/getMenu',
+    method: 'post',
+    data
   })
 }
 
@@ -26,7 +30,7 @@ export function getMenuSuperior(ids) {
 
 export function getChild(id) {
   return request({
-    url: 'api/menus/child?id=' + id,
+    url: 'v1/menu/getChild?id=' + id,
     method: 'get'
   })
 }

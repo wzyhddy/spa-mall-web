@@ -5,7 +5,7 @@
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
         <el-input v-model="query.blurry" size="small" clearable placeholder="输入名称或者描述搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <date-range-picker v-model="query.createTime" class="date-item" />
+        <date-range-picker v-model="query.betweenTime" class="date-item" />
         <rrOperation />
       </div>
       <crudOperation :permission="permission" />
@@ -43,7 +43,7 @@
           />
         </el-form-item>
         <el-form-item label="描述信息" prop="description">
-          <el-input v-model="form.description" style="width: 380px;" rows="5" type="textarea" />
+          <el-input v-model="form.remark" style="width: 380px;" rows="5" type="textarea" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -63,12 +63,15 @@
             <el-table-column prop="name" label="名称" />
             <el-table-column prop="dataScope" label="数据权限" />
             <el-table-column prop="level" label="角色级别" />
-            <el-table-column :show-overflow-tooltip="true" prop="description" label="描述" />
-            <el-table-column :show-overflow-tooltip="true" width="135px" prop="createTime" label="创建日期" />
+            <el-table-column :show-overflow-tooltip="true" prop="remark" label="描述" />
+            <el-table-column :show-overflow-tooltip="true" width="135px" prop="createTime" label="创建日期">
+              <template slot-scope="{row}">
+                {{ row.createTime | formatDate }}
+              </template>
+            </el-table-column>
             <el-table-column v-if="checkPer(['admin','roles:edit','roles:del'])" label="操作" width="130px" align="center" fixed="right">
               <template slot-scope="scope">
                 <udOperation
-                  v-if="scope.row.level >= level"
                   :data="scope.row"
                   :permission="permission"
                 />
@@ -135,7 +138,7 @@ export default {
   name: 'Role',
   components: { Treeselect, pagination, crudOperation, rrOperation, udOperation, DateRangePicker },
   cruds() {
-    return CRUD({ title: '角色', url: 'api/roles', sort: 'level,asc', crudMethod: { ...crudRoles }})
+    return CRUD({ title: '角色', url: '/v1/role/searchByPage', sort: 'level,asc', crudMethod: { ...crudRoles }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
@@ -160,15 +163,15 @@ export default {
     }
   },
   created() {
-    crudRoles.getLevel().then(data => {
-      this.level = data.level
-    })
+    // crudRoles.getLevel().then(data => {
+    //   this.level = data.level
+    // })
   },
   methods: {
     getMenuDatas(node, resolve) {
       setTimeout(() => {
         getMenusTree(node.data.id ? node.data.id : 0).then(res => {
-          resolve(res)
+          resolve(res.data)
         })
       }, 100)
     },
@@ -217,22 +220,20 @@ export default {
     // 触发单选
     handleCurrentChange(val) {
       if (val) {
-        const _this = this
         // 清空菜单的选中
         this.$refs.menu.setCheckedKeys([])
         // 保存当前的角色id
         this.currentId = val.id
         // 初始化默认选中的key
         this.menuIds = []
-        val.menus.forEach(function(data) {
-          _this.menuIds.push(data.id)
-        })
+        this.menuIds.push(val.id)
         this.showButton = true
       }
     },
     menuChange(menu) {
       // 获取该节点的所有子节点，id 包含自身
-      getChild(menu.id).then(childIds => {
+      getChild(menu.id).then(res => {
+        const childIds = res.data
         // 判断是否在 menuIds 中，如果存在则删除，否则添加
         if (this.menuIds.indexOf(menu.id) !== -1) {
           for (let i = 0; i < childIds.length; i++) {

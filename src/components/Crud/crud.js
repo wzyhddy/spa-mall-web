@@ -1,5 +1,5 @@
 import { initData, download } from '@/api/data'
-import { parseTime, downloadFile } from '@/utils/index'
+import { parseTime } from '@/utils/index'
 import Vue from 'vue'
 
 /**
@@ -138,8 +138,8 @@ function CRUD(options) {
             table.store.states.treeData = {}
             table.store.states.lazyTreeNodeMap = {}
           }
-          crud.page.totalCount = data.totalCount
           crud.data = data.data
+          crud.page.totalCount = data.totalCount
           crud.resetDataStatus()
           // time 毫秒后显示表格
           setTimeout(() => {
@@ -661,9 +661,7 @@ function presenter(crud) {
     data() {
       // 在data中返回crud，是为了将crud与当前实例关联，组件观测crud相关属性变化
       return {
-        crud: this.crud,
-        pageNo: this.crud.pageNo,
-        page: this.crud.page
+        crud: this.crud
       }
     },
     beforeCreate() {
@@ -734,7 +732,8 @@ function pagination() {
     data() {
       return {
         crud: this.crud,
-        pageNo: this.crud.pageNo
+        pageNo: this.crud.pageNo,
+        page: this.crud.page
       }
     },
     beforeCreate() {

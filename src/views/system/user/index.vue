@@ -38,9 +38,9 @@
               class="filter-item"
               @keyup.enter.native="crud.toQuery"
             />
-            <date-range-picker v-model="query.createTime" class="date-item" />
+            <date-range-picker v-model="query.betweenTime" class="date-item" />
             <el-select
-              v-model="query.enabled"
+              v-model="query.validStatus"
               clearable
               size="small"
               placeholder="状态"
@@ -74,8 +74,8 @@
         <!--表单渲染-->
         <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="570px">
           <el-form ref="form" :inline="true" :model="form" :rules="rules" size="small" label-width="66px">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="form.username" @keydown.native="keydown($event)" />
+            <el-form-item label="用户名" prop="userName">
+              <el-input v-model="form.userName" @keydown.native="keydown($event)" />
             </el-form-item>
             <el-form-item label="电话" prop="phone">
               <el-input v-model.number="form.phone" />
@@ -86,9 +86,9 @@
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="form.email" />
             </el-form-item>
-            <el-form-item label="部门" prop="dept.id">
+            <el-form-item label="部门" prop="deptId">
               <treeselect
-                v-model="form.dept.id"
+                v-model="form.deptId"
                 :options="depts"
                 :load-options="loadDepts"
                 style="width: 178px"
@@ -119,9 +119,9 @@
               </el-radio-group>
             </el-form-item>
             <el-form-item label="状态">
-              <el-radio-group v-model="form.enabled" :disabled="form.id === user.id">
+              <el-radio-group v-model="form.validStatus" :disabled="form.id === user.id">
                 <el-radio
-                  v-for="item in dict.user_status"
+                  v-for="item in dict.valid_status"
                   :key="item.id"
                   :label="item.value"
                 >{{ item.label }}</el-radio>
@@ -139,7 +139,6 @@
                 <el-option
                   v-for="item in roles"
                   :key="item.name"
-                  :disabled="level !== 1 && item.level <= level"
                   :label="item.name"
                   :value="item.id"
                 />
@@ -154,7 +153,7 @@
         <!--表格渲染-->
         <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
           <el-table-column :selectable="checkboxT" type="selection" width="55" />
-          <el-table-column :show-overflow-tooltip="true" prop="username" label="用户名" />
+          <el-table-column :show-overflow-tooltip="true" prop="userName" label="用户名" />
           <el-table-column :show-overflow-tooltip="true" prop="nickName" label="昵称" />
           <el-table-column prop="gender" label="性别" />
           <el-table-column :show-overflow-tooltip="true" prop="phone" width="100" label="电话" />
@@ -164,14 +163,14 @@
               <div>{{ scope.row.deptName }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="状态" align="center" prop="enabled">
+          <el-table-column label="状态" align="center" prop="validStatus">
             <template slot-scope="scope">
               <el-switch
-                v-model="scope.row.enabled"
+                v-model="scope.row.validStatus"
                 :disabled="user.id === scope.row.id"
                 active-color="#409EFF"
                 inactive-color="#F56C6C"
-                @change="changeEnabled(scope.row, scope.row.enabled)"
+                @change="changeEnabled(scope.row, scope.row.validStatus)"
               />
             </template>
           </el-table-column>
@@ -217,7 +216,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 let userRoles = []
 let userJobs = []
-const defaultForm = { id: null, username: null, nickName: null, gender: '男', email: null, enabled: 'false', roles: [], jobs: [], dept: { id: null }, phone: null }
+const defaultForm = { id: null, userName: null, nickName: null, gender: '男', email: null, validStatus: '1', roles: [], jobs: [], dept: { id: null }, phone: null }
 export default {
   name: 'User',
   components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
@@ -226,7 +225,7 @@ export default {
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   // 数据字典
-  dicts: ['user_status'],
+  dicts: ['valid_status'],
   data() {
     // 自定义验证
     const validPhone = (rule, value, callback) => {
@@ -253,7 +252,7 @@ export default {
         { key: 'false', display_name: '锁定' }
       ],
       rules: {
-        username: [
+        userName: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
           { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
         ],
@@ -316,14 +315,9 @@ export default {
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
       this.getRoles()
-      if (form.id == null) {
-        this.getDepts()
-      } else {
-        this.getSupDepts(form.dept.id)
-      }
+      this.getDepts()
       this.getRoleLevel()
       this.getJobs()
-      form.enabled = form.enabled.toString()
     },
     // 新增前将多选的值设置为空
     [CRUD.HOOK.beforeToAdd]() {
@@ -332,26 +326,33 @@ export default {
     },
     // 初始化编辑时候的角色与岗位
     [CRUD.HOOK.beforeToEdit](crud, form) {
-      this.getJobs(this.form.dept.id)
+      if (this.form.dept && this.form.dept.id) {
+        this.getJobs(this.form.dept.id)
+      }
       this.jobDatas = []
       this.roleDatas = []
       userRoles = []
       userJobs = []
       const _this = this
-      form.roles.forEach(function(role, index) {
-        _this.roleDatas.push(role.id)
-        const rol = { id: role.id }
-        userRoles.push(rol)
-      })
-      form.jobs.forEach(function(job, index) {
-        _this.jobDatas.push(job.id)
-        const data = { id: job.id }
-        userJobs.push(data)
-      })
+      if (form.roles) {
+        form.roles.forEach(function(role, index) {
+          _this.roleDatas.push(role.id)
+          const rol = { id: role.id }
+          userRoles.push(rol)
+        })
+      }
+
+      if (form.jobs) {
+        form.jobs.forEach(function(job, index) {
+          _this.jobDatas.push(job.id)
+          const data = { id: job.id }
+          userJobs.push(data)
+        })
+      }
     },
     // 提交前做的操作
     [CRUD.HOOK.afterValidateCU](crud) {
-      if (!crud.form.dept.id) {
+      if (!crud.form.deptId) {
         this.$message({
           message: '部门不能为空',
           type: 'warning'
@@ -449,30 +450,31 @@ export default {
     },
     // 改变状态
     changeEnabled(data, val) {
-      this.$confirm('此操作将 "' + this.dict.label.user_status[val] + '" ' + data.username + ', 是否继续？', '提示', {
+      debugger
+      console.log(this.dict.label.valid_status[1])
+      const index = val ? 1 : 0
+      this.$confirm('此操作将 "' + this.dict.label.valid_status[index] + '" ' + data.userName + ', 是否继续？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         crudUser.edit(data).then(res => {
-          this.crud.notify(this.dict.label.user_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
+          this.crud.notify(this.dict.label.valid_status[index] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
         }).catch(() => {
-          data.enabled = !data.enabled
         })
       }).catch(() => {
-        data.enabled = !data.enabled
       })
     },
     // 获取弹窗内角色数据
     getRoles() {
       getAll().then(res => {
-        this.roles = res
+        this.roles = res.data
       }).catch(() => { })
     },
     // 获取弹窗内岗位数据
     getJobs() {
       getAllJob().then(res => {
-        this.jobs = res.content
+        this.jobs = res.data.data
       }).catch(() => { })
     },
     // 获取权限级别
